@@ -1,0 +1,40 @@
+name: Check PAT Permissions
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check-pat:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo last 4 chars of secret
+        run: echo "${{ secrets.DESTINATION_REPO_PAT }}" | rev | cut -c1-4 | rev
+
+      - name: Test PAT permissions
+        env:
+          DESTINATION_REPO_PAT: ${{ secrets.DESTINATION_REPO_PAT }}
+          DESTINATION_REPO: "rezwanul7/micro-blog" # replace with your repo
+        run: |
+          set -e
+
+          # Configure Git with dummy user
+          git config --global user.name "PAT Test Bot"
+          git config --global user.email "pat-test@example.com"
+
+          # Clone destination repo using PAT
+          git clone https://$DESTINATION_REPO_PAT@github.com/$DESTINATION_REPO.git repo-test
+          cd repo-test
+
+          # Create dummy branch and commit a test file
+          git checkout -b pat-test
+          echo "test" > test.txt
+          git add test.txt
+          git commit -m "Test PAT permissions"
+
+          # Try to push
+          if git push origin pat-test; then
+            echo "✅ PAT has write access!"
+          else
+            echo "❌ PAT cannot push to the destination repo!"
+            exit 1
+          fi
