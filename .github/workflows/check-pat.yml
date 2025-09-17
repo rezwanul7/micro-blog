@@ -2,37 +2,61 @@ name: Check PAT Permissions
 
 on:
   workflow_dispatch:
+    inputs:
+      destination_repo:
+        description: "Owner/Repo of the destination repository"
+        required: true
+      test_branch:
+        description: "Branch name to use for testing push"
+        required: true
+        default: "pat-test"
+      commit_message:
+        description: "Commit message for the test commit"
+        required: true
+        default: "Test PAT permissions"
 
 jobs:
   check-pat:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Echo last 4 chars of secret
+      - name: Ensure PAT exists
+        run: |
+          if [ -z "${{ secrets.DESTINATION_REPO_PAT }}" ]; then
+            echo "❌ ERROR: DESTINATION_REPO_PAT secret is not set!"
+            exit 1
+          else
+            echo "✅ PAT is provided"
+          fi
+
+      - name: Echo last 4 chars of PAT secret
         run: echo "${{ secrets.DESTINATION_REPO_PAT }}" | rev | cut -c1-4 | rev
 
       - name: Test PAT permissions
         env:
           DESTINATION_REPO_PAT: ${{ secrets.DESTINATION_REPO_PAT }}
-          DESTINATION_REPO: "rezwanul7/micro-blog" # replace with your repo
+          DESTINATION_REPO: ${{ github.event.inputs.destination_repo }}
+          TEST_BRANCH: ${{ github.event.inputs.test_branch }}
+          COMMIT_MESSAGE: ${{ github.event.inputs.commit_message }}
         run: |
           set -e
 
-          # Configure Git with dummy user
+          # Configure Git
           git config --global user.name "PAT Test Bot"
           git config --global user.email "pat-test@example.com"
 
-          # Clone destination repo using PAT
+          # Clone destination repo
           git clone https://$DESTINATION_REPO_PAT@github.com/$DESTINATION_REPO.git repo-test
           cd repo-test
 
-          # Create dummy branch and commit a test file
-          git checkout -b pat-test
-          echo "test" > test.txt
+          # Create dummy branch and commit
+          git checkout -b "$TEST_BRANCH"
+          echo "test $(date)" > test.txt
           git add test.txt
-          git commit -m "Test PAT permissions"
+          git commit -m "$COMMIT_MESSAGE"
 
           # Try to push
-          if git push origin pat-test; then
+          if git push origin "$TEST_BRANCH"; then
             echo "✅ PAT has write access!"
           else
             echo "❌ PAT cannot push to the destination repo!"
