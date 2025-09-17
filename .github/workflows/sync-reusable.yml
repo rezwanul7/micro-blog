@@ -1,0 +1,38 @@
+name: Sync to App Repo
+
+on:
+  workflow_dispatch:
+    inputs:
+      source-branch:
+        description: "Source branch to sync from"
+        required: true
+        default: "main"
+      target-repo:
+        description: "Owner/Repo of the target repository"
+        required: true
+      target-branch:
+        description: "Target branch to sync to"
+        required: true
+        default: "main"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.source-branch }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add target repo to git remotes
+        run: git remote add target https://github.com/${{ inputs.target-repo }}.git
+
+      - name: Push code to target repo
+        run: git push https://${{ secrets.DESTINATION_REPO_PAT }}@github.com/${{ inputs.target-repo }} HEAD:${{ inputs.target-branch }} --force
