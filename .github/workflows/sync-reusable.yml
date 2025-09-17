@@ -1,4 +1,4 @@
-name: Sync to App Repo
+name: Sync Mono Repo Branch to Poly Repo
 
 on:
   workflow_dispatch:
@@ -18,7 +18,6 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
-
     steps:
       - name: Ensure PAT exists
         run: |
@@ -32,18 +31,41 @@ jobs:
       - name: Echo last 4 chars of PAT secret
         run: echo "${{ secrets.DESTINATION_REPO_PAT }}" | rev | cut -c1-4 | rev
 
+      # 1. Checkout the source branch in the base repo
       - name: Checkout source branch
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ inputs.source-branch }}
 
-      - name: Clone target repo
-        run: git clone https://${{ secrets.DESTINATION_REPO_PAT }}@github.com/${{ inputs.target-repo }} target-repo
+      # 2. Clone the target repository
+      - name: Clone target repository
+        run: |
+          git clone https://${{ secrets.DESTINATION_REPO_PAT }}@github.com/${{ inputs.target-repo }} target-repo
 
-      - name: Sync source into target
+      # 3. Configure Git for automated commits/pushes
+      - name: Configure Git
         run: |
           cd target-repo
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+
+      # 4. Merge source branch into target repository branch
+      - name: Merge source into target
+        run: |
+          cd target-repo
+          # Checkout target branch or create if doesn't exist
+          git fetch origin ${{ inputs.target-branch }} || true
           git checkout -B ${{ inputs.target-branch }} origin/${{ inputs.target-branch }} || git checkout -b ${{ inputs.target-branch }}
-          git pull ../ ${{ inputs.source-branch }}  # relative path to source repo in root
-          git push origin ${{ inputs.target-branch }} --force
+          # Pull changes from base repo (relative path)
+          git pull ../ ${{ inputs.source-branch }} --allow-unrelated-histories
+
+      # 5. Push merged changes to target repository
+      - name: Push changes
+        run: |
+          cd target-repo
+          git push origin ${{ inputs.target-branch }}
+
+      # 6. Optional clean-up
+      - name: Clean up local clone
+        run: rm -rf target-repo
