@@ -32,13 +32,18 @@ jobs:
       - name: Echo last 4 chars of PAT secret
         run: echo "${{ secrets.DESTINATION_REPO_PAT }}" | rev | cut -c1-4 | rev
 
+      - name: Checkout source branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.source-branch }}
+
       - name: Clone target repo
         run: git clone https://${{ secrets.DESTINATION_REPO_PAT }}@github.com/${{ inputs.target-repo }} target-repo
 
-      - name: Sync branches
+      - name: Sync source into target
         run: |
           cd target-repo
-          git fetch origin
           git checkout -B ${{ inputs.target-branch }} origin/${{ inputs.target-branch }} || git checkout -b ${{ inputs.target-branch }}
-          git pull ../../ ${{ inputs.source-branch }}  # merge source branch changes
+          git pull ../ ${{ inputs.source-branch }}  # relative path to source repo in root
           git push origin ${{ inputs.target-branch }} --force
