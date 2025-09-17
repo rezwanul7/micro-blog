@@ -1,0 +1,27 @@
+name: Trigger Mono→Poly Sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      source-branch:
+        description: "Source branch to sync from"
+        required: true
+        default: main
+      target-repo:
+        description: "Owner/Repo of the target repository"
+        required: true
+        default: owner/target-repo
+      target-branch:
+        description: "Target branch to sync to"
+        required: false
+        default: main
+
+jobs:
+  call-sync:
+    uses: ./.github/workflows/sync-mono-to-poly.yml
+    with:
+      source-branch: ${{ inputs.source-branch }}
+      target-repo: ${{ inputs.target-repo }}
+      target-branch: ${{ inputs.target-branch }}
+    secrets:
+      DESTINATION_REPO_PAT: ${{ secrets.DESTINATION_REPO_PAT }}

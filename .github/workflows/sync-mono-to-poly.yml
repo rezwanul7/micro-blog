@@ -1,19 +1,25 @@
 name: Sync Mono Repo Branch to Poly Repo
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       source-branch:
         description: "Source branch to sync from"
         required: true
+        type: string
         default: "main"
       target-repo:
         description: "Owner/Repo of the target repository"
         required: true
+        type: string
       target-branch:
         description: "Target branch to sync to"
         required: true
+        type: string
         default: "main"
+    secrets:
+      DESTINATION_REPO_PAT:
+        required: true
 
 jobs:
   sync:
