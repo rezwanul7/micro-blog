@@ -1,19 +1,39 @@
+import {envConfig} from "@/config/env";
+
 export const siteData = {
-    title: "My Awesome Site",
-    subTitle: "A place to share my thoughts and projects",
-    description: "This is an awesome site built with Next.js and TypeScript.",
-    keywords: ["Next.js", "TypeScript", "Blog", "Tech", "Projects"],
+    name: "MicroBlog",
+    // Can be used for default meta title
+    title: "Knowledge Hub for Developers",
+    // Can be used for default meta description
+    description: "Explore curated articles, tutorials, and insights from the world of modern development. Stay ahead with MicroBlog - your knowledge hub for developers.",
+    keywords: [
+        "MicroBlog",
+        "developer blog",
+        "knowledge hub",
+        "programming tutorials",
+        "software development insights",
+    ],
+
+    // Logo and branding
+    logo: {
+        text: "MicroBlog",
+        tagline: "Knowledge Hub",
+    },
 
     // Author / creator
     authorName: "SM Rezwanul Islam",
     twitterHandle: "@rezwanul7",
 
     // URLs
-    url: process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000',       // Replace with your real domain
+    url: envConfig.baseUrl,       // Replace with your real domain
     repoUrl: "https://github.com/rezwanul7/micro-blog",
     authorUrl: "https://rezwanul7.github.io",
     ogImage: "/og-placeholder.png",             // Default OG image path
 
     // SEO / verification
     googleVerification: "",                 // Add Google Search Console code if needed
+
+    footer: {
+        copyright: `© ${new Date().getFullYear()} MicroBlog. All rights reserved.`,
+    }
 }
