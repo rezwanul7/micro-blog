@@ -1,21 +1,19 @@
-import type {Metadata} from "next";
 import {SearchParams} from "nuqs/server";
-import {postSearch} from "@/app/dashboard/posts/_lib/post.search";
-import PostList2 from "@/app/(landing)/posts/_components/post-list-2";
+import {GetPostsSearchParamsDto, postSearch} from "@/app/dashboard/posts/_lib/post.search";
+import PostListWrapper from "@/app/(landing)/posts/_components/post-list-wrapper";
 import {dehydrate, HydrationBoundary} from "@tanstack/react-query";
 import {fetchPosts} from "@/app/(landing)/posts/_lib/post.api.client";
 import {getQueryClient} from "@/lib/tanstack-query-client";
-
-export const metadata: Metadata = {
-    title: 'HomePage'
-};
 
 type pageProps = {
     searchParams: Promise<SearchParams>;
 };
 
 export default async function Page(props: pageProps) {
-    const searchParams = await props.searchParams;
+    const searchParamsRaw = await props.searchParams;
+
+    // Convert/parse search params to match NuQS expected structure
+    const searchParams: GetPostsSearchParamsDto = postSearch.cache.parse(searchParamsRaw);
 
     // 1. Get the initial post data (SSR)
     const queryString = postSearch.serialize(searchParams);
@@ -32,7 +30,7 @@ export default async function Page(props: pageProps) {
         <div>
             <HydrationBoundary state={dehydrate(queryClient)}>
                 {/*<HeroSection/>*/}
-                <PostList2
+                <PostListWrapper
                     // posts={items} total={total}
                 />
             </HydrationBoundary>
